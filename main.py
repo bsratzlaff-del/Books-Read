@@ -42,7 +42,7 @@ def update_books(book_id:int, book: Item):
         "book": book,
     }
 
-
+#endpoint 5: delete item in database
 @app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_books(book_id:int):
     if book_id not in book_names_db:
@@ -51,4 +51,4 @@ def delete_books(book_id:int):
             detail="Book not found"
         )
     del book_names_db[book_id]
-    return None
+
