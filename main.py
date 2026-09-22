@@ -27,7 +27,7 @@ def get_item_by_id(book_id: int):
     return {"error": "Book not found"}
 
 #endpoint 3: add item to database
-@app.post("/books", status_code=21) #status code returns 201 created status code
+@app.post("/books", status_code=201) #status code returns 201 created status code
 def create_book(book: Item):
     new_id = max(book_names_db.keys(), default = 0) + 1
     book_names_db[new_id] = book.model_dump()
