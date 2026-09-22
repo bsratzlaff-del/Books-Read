@@ -33,3 +33,11 @@ def create_book(book: Item):
     book_names_db[new_id] = book.model_dump()
     return {"message": "item added successfully", "id": new_id}
 
+
+#endpoint 4: update item in database
+@app.put("/books/{item_id}")
+def update_books(book_id:int, book: Item):
+    return {
+        "book_id": book_id,
+        "book": book,
+    }
