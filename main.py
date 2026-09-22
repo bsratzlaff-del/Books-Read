@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, status
 from pydantic import BaseModel
 
 app = FastAPI()
@@ -35,9 +35,20 @@ def create_book(book: Item):
 
 
 #endpoint 4: update item in database
-@app.put("/books/{item_id}")
+@app.put("/books/{book_id}")
 def update_books(book_id:int, book: Item):
     return {
         "book_id": book_id,
         "book": book,
     }
+
+
+@app.delete("/books/{book_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_books(book_id:int):
+    if book_id not in book_names_db:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Book not found"
+        )
+    del book_names_db[book_id]
+    return None
