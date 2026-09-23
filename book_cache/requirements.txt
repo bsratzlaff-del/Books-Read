@@ -1,0 +1,11 @@
+#requirements.txt file similar to pom file. has required versions for backend to work. 
+#This one handles web requests, calling external APIs such as Google books, and runs tests
+
+#fastapi is the web framework for endpoints
+fastapi>=0.110.0
+#uvicorn[standard] is the ASGI server that runs FastAPI
+uvicorn[standard]>=0.28.0
+#httpx is the clientn thats used to fetch the book data from external APIs, as well as used by FastAPI's TestClient
+httpx>=0.27.0
+#pytest is for running unit tests
+pytest>=8.0.0

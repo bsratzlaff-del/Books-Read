@@ -1,0 +1,15 @@
+#requirements.txt file similar to pom file. has required versions for backend to work. 
+#This one ensures the user backend can properly manage users, connect to PostgreSQL, and can call book_cache
+
+#fastapi is the web framework for endpoints
+fastapi>=0.110.0
+#uvicorn[standard] is the ASGI server that runs FastAPI
+uvicorn[standard]>=0.28.0
+#SQL Alchemy is the ORM used to define user models and query database
+sqlalchemy>=2.0.0
+#psycopg2-binary is the driver that allows Python to connect directly to PostgreSQL (similar to Maven)
+psycopg2-binary>=2.9.0
+#httpx used to send requests from this service to the book_cache 
+httpx>=0.27.0
+#pytest is for running unit tests
+pytest>=8.0.0
