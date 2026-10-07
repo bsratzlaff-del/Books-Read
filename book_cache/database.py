@@ -27,7 +27,7 @@ def get_db_books():
 
 
 
-
+#connection test for terminal
 from sqlalchemy import text
 
 if __name__ == "__main__":
