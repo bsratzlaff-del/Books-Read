@@ -6,3 +6,5 @@ This project uses Python and FastAPI. No AI used to build the code, to continue 
 9/22/26 - I am adding multiple databases so I can practice micro transactions and eventually a kubernetes system
         - using book backend as a cache system rather than an inventory system to help the app speed up. then, it will call either google books api or open library books api if the title doesn't exist in the cache, then store the recent book and delete oldest one
         - This method would also call book ISBN from user info in backend to the book cache
+
+10/7/2026 - using FastAPI and SQLModel for building backend to make app lightweight
