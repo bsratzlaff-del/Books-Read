@@ -27,7 +27,7 @@ def get_db_books():
 
 
 
-#connection test for terminal
+#\connection test for terminal
 from sqlalchemy import text
 
 if __name__ == "__main__":
@@ -38,3 +38,4 @@ if __name__ == "__main__":
     except Exception as e:
         print("\n❌ Connection failed:")
         print(e)
+#
