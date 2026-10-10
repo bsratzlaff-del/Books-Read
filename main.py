@@ -59,7 +59,7 @@ def get_book_by_id(book_id: int, db:Session = Depends(get_db_books)):
     book = db.query(models.Item).filter(models.Item.id == book_id).first()
     if not book:
         raise HTTPException(
-            status_code == status.HTTP_404_NOT_FOUND, 
+            status_code = status.HTTP_404_NOT_FOUND, 
             detail = "Book not found"
         )
     return book
@@ -70,7 +70,7 @@ def update_book(book_id:int, book_input: ItemCreate, db:Session = Depends(get_db
     db_book = db.query(models.Item).filter(models.Item.id == book_id).first()
     if not db_book:
         raise HTTPException(
-            status_code==status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail = "Book not found"
         )
 
