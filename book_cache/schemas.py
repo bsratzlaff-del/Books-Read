@@ -6,8 +6,8 @@ from pydantic import BaseModel
 class BookCreate(BaseModel):
     title: str
     isbn: str
-    first_author:str
-    last_author: str
+    author_name:str
+    
 
 #when sending book back to client
 class BookResponse(BookCreate):

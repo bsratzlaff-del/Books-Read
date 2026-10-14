@@ -1,4 +1,9 @@
-#Python cache ignore
-**/__pycache__/
+# Byte-compiled / optimized / DLL files
+__pycache__/
 *.py[cod]
 *$py.class
+
+# Testing / Caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/

@@ -13,8 +13,8 @@ app = FastAPI()
 class ItemCreate(BaseModel):
     title: str
     isbn: str
-    first_author: str
-    last_author: str
+    author_name: str
+    
 
 #defines structural template for sending data back to user
 class ItemResponse(ItemCreate):
@@ -43,8 +43,7 @@ def create_book(book_input: ItemCreate, db: Session = Depends(get_db_books)):
     new_book = models.Item(
         title=book_input.title,
         isbn=book_input.isbn,
-        first_author=book_input.first_author,
-        last_author=book_input.last_author,
+        author_name=book_input.author_name
     )
 
     db.add(new_book)
@@ -77,8 +76,8 @@ def update_book(book_id:int, book_input: ItemCreate, db:Session = Depends(get_db
     #update attributes on the database object
     db_book.title = book_input.title
     db_book.isbn = book_input.isbn
-    db_book.first_author = book_input.first_author
-    db_book.last_author = book_input.last_author
+    db_book.author_name = book_input.author_name
+    
 
     db.commit()
     db.refresh(db_book)
