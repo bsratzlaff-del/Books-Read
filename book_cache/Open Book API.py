@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     finally:
         # Code after yield / in finally runs on shutdown
         await app.state.http_client.aclose()
-        
+
 
 app = FastAPI(title="BookshelfApp", version="1.0", lifespan=lifespan)
 
@@ -34,7 +34,7 @@ async def search_books(q: str = Query(..., description="Search query term")):
         
         # Instantiate your schemas from models.py
         return [
-            BookSearchResult(
+            Book_Name(
                 title=doc.get("title"),
                 author_name=doc.get("author_name", []),
                 first_publish_year=doc.get("first_publish_year"),
