@@ -7,3 +7,8 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+
+`n__pycache__/`n*.pyc`n.env
+__pycache__/
+*.pyc
+.env
