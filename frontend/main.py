@@ -1,20 +1,25 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, ConfigDict
-from book_cache import models
+from book_cache import open_book, models
 from sqlalchemy.orm import Session
 from book_cache.database import Base, engine, get_db_books
+from book_cache.open_book import router as book_router
 
 #creates tables automatically in Postgre when app launches
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.include_router(book_router)
+
+@app.get("/books/search")
+def search_books(title: str):
+    return open_book.search(title)
 
 #defines structural template for data coming in 
 class ItemCreate(BaseModel):
     title: str
     isbn: str
     author_name: str
-    
 
 #defines structural template for sending data back to user
 class ItemResponse(ItemCreate):
