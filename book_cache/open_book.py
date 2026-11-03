@@ -20,10 +20,9 @@ class BookResponse(BaseModel):
 
 @router.get("/search", response_model=List[BookResponse])
 async def search_books(
-    q: Optional[str] = Query(None, description="Search query"),
-    title: Optional[str] = Query(None, description="Book title"),
+    q: str = Query(None, description="Search query"),
 ):
-    query_term = title or q
+    query_term = q
     if not query_term:
         raise HTTPException(
             status_code=400,

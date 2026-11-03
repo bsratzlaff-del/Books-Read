@@ -14,12 +14,10 @@ app.include_router(book_router)
 
 #updated to combine cache lookup and open library api
 @app.get("/books/lookup")
-async def get_or_fetch_book(title: str, db:
-Session = Depends(get_db_books)):
+async def get_or_fetch_book(q: str, db: Session = Depends(get_db_books)):
     # First checks database cache first
-
     cached_book = db.query(models.Book_Name).filter(
-        models.Book_Name.title.ilike(f"%{title}%")
+        models.Book_Name.title.ilike(f"%{q}%")
     ).first()
 
     if cached_book:
@@ -28,7 +26,7 @@ Session = Depends(get_db_books)):
 
     # Second Cache Misses, call Open Library API
     print("⚡ Cache Miss! Fetching from Open Library")
-    open_library_results = await open_book.search_books(title)
+    open_library_results = await open_book.search_books(q=q)
 
     if not open_library_results:
         raise HTTPException(status_code=404, detail="Book not found anywhere")
