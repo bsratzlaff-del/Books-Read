@@ -1,3 +1,6 @@
+#to test all functions at once:
+python -m pytest -s
+
 #to run test_cache.py in terminal 
 python -m pytest book_cache/Tests/test_cache.py -s
 
