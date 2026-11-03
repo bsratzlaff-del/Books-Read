@@ -1,9 +1,10 @@
 from fastapi import Depends, FastAPI, HTTPException, status
 from pydantic import BaseModel, ConfigDict
-from book_cache import open_book, models
+from . import open_book, models
 from sqlalchemy.orm import Session
-from book_cache.database import Base, engine, get_db_books
-from book_cache.open_book import router as book_router
+from .database import Base, engine, get_db_books
+from .open_book import router as book_router
+from .schemas import BookCreate, BookResponse
 
 #creates tables automatically in Postgre when app launches
 Base.metadata.create_all(bind=engine)
@@ -11,20 +12,42 @@ Base.metadata.create_all(bind=engine)
 app = FastAPI()
 app.include_router(book_router)
 
-@app.get("/books/search")
-def search_books(title: str):
-    return open_book.search(title)
+#updated to combine cache lookup and open library api
+@app.get("/books/lookup")
+async def get_or_fetch_book(title: str, db:
+Session = Depends(get_db_books)):
+    # First checks database cache first
 
-#defines structural template for data coming in 
-class ItemCreate(BaseModel):
-    title: str
-    isbn: str
-    author_name: str
+    cached_book = db.query(models.Book_Name).filter(
+        models.Book_Name.title.ilike(f"%{title}")
+    ).first()
 
-#defines structural template for sending data back to user
-class ItemResponse(ItemCreate):
-    id:int
-    model_config = ConfigDict(from_attributes=True)
+    if cached_book:
+        print("🎯 Cache Hit! Returning from PostgreSQL")
+        return cached_book
+
+    # Second Cache Misses, call Open Library API
+    print("⚡ Cache Miss! Fetching from Open Library")
+    open_library_results = await open_book.fetch_from_open_library(title)
+
+    if not open_library_results:
+        raise HTTPException(status_code=404, detail="Book not found anywhere")
+
+    first_result = open_library_results[0]
+
+    # Third, save to cache in database
+    new_cached_book = models.Book_Name(
+        title=first_result.title,
+        isbn=first_result.isbn or "UNKNOWN",
+        author_name=", ".join(first_result.author_name) 
+            if first_result.author_name 
+            else ""
+    )
+    db.add(new_cached_book)
+    db.commit()
+    db.refresh(new_cached_book)
+
+    return new_cached_book
 
 #endpoint 1: fetch all items
 @app.get("/books")
@@ -33,8 +56,8 @@ def get_all_books(db:Session = Depends(get_db_books)):
     return books
 
 #endpoint 2: add book to database. checks to ensure book has been added to database or not
-@app.post("/books", response_model=ItemResponse, status_code=status.HTTP_201_CREATED) #status code returns 201 created status code
-def create_book(book_input: ItemCreate, db: Session = Depends(get_db_books)):
+@app.post("/books", response_model=BookResponse, status_code=status.HTTP_201_CREATED) #status code returns 201 created status code
+def create_book(book_input: BookCreate, db: Session = Depends(get_db_books)):
     existing_book = (
         db.query(models.Book_Name).filter(models.Book_Name.isbn == book_input.isbn).first()
     )
@@ -58,7 +81,7 @@ def create_book(book_input: ItemCreate, db: Session = Depends(get_db_books)):
     return new_book
 
 #endpoint 3: fetch specific item by its id, return error code if not found
-@app.get("/books/{book_id}", response_model=ItemResponse)
+@app.get("/books/{book_id}", response_model=BookResponse)
 def get_book_by_id(book_id: int, db:Session = Depends(get_db_books)):
     book = db.query(models.Book_Name).filter(models.Book_Name.id == book_id).first()
     if not book:
@@ -69,8 +92,8 @@ def get_book_by_id(book_id: int, db:Session = Depends(get_db_books)):
     return book
 
 #endpoint 4: update item in database
-@app.put("/books/{book_id}", response_model=ItemResponse)
-def update_book(book_id:int, book_input: ItemCreate, db:Session = Depends(get_db_books)):
+@app.put("/books/{book_id}", response_model=BookResponse)
+def update_book(book_id:int, book_input: BookCreate, db:Session = Depends(get_db_books)):
     db_book = db.query(models.Book_Name).filter(models.Book_Name.id == book_id).first()
     if not db_book:
         raise HTTPException(

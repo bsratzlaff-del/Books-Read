@@ -1,5 +1,5 @@
 #launch main.py  fastapi code in terminal
-python -m uvicorn frontend.main:app --reload
+python -m uvicorn book_cache.main:app --reload
 
 
 fastapi gui to test with server
