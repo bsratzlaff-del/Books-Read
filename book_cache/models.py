@@ -1,7 +1,9 @@
 #how to structure table look in postgreSQL
 from .database import Base
 from sqlalchemy import Column, Integer, String
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+
 
 class Book_Name(Base):
     __tablename__ = "book_id"
@@ -18,5 +20,4 @@ class BookResponse(BaseModel):
     isbn: str
     author_name: str | None = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)

@@ -1,6 +1,6 @@
 #Defines data shape that the client sends in the HTTP request body
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional
 
 
@@ -16,8 +16,7 @@ class BookCreate(BaseModel):
 class BookResponse(BookCreate):
     id: int
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict (from_attributes = True)
 
 
 #sending book to user_backend
