@@ -8,3 +8,5 @@ This project uses Python and FastAPI. No AI used to build the code, to continue 
         - This method would also call book ISBN from user info in backend to the book cache
 
 10/7/2026 - using FastAPI and SQLModel for building backend to make app lightweight, connected with PostgreSQL to make stable
+
+11/3/2026 - using React and Vite App to power the front end and using api calls to deploy it to the backend. Created test cases using pytest for backend and vitest for frontend
