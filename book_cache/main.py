@@ -1,15 +1,29 @@
 from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi.middleware.cors import CORSMiddleware 
 from pydantic import BaseModel, ConfigDict
 from . import open_book, models
 from sqlalchemy.orm import Session
 from .database import Base, engine, get_db_books
 from .open_book import router as book_router
 from .schemas import BookCreate, BookResponse
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+cors_origins = os.getenv("CORS_ORIGINS").split(",")
+
 
 #creates tables automatically in Postgre when app launches
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins= cors_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(book_router)
 
 #updated to combine cache lookup and open library api

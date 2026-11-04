@@ -1,8 +1,12 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
+import os
+from dotenv import load_dotenv
 
-DATABASE_URL = "postgresql://postgres:postgres@localhost:5432/postgres"
+#to make database url go to .env file for easy conversion and security
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 #Manages the actual network connection pool to PostgreSQL
 engine = create_engine(DATABASE_URL)
