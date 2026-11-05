@@ -5,21 +5,23 @@ import './styles/App.css'
 function App() {
   const [query, setQuery] = useState('')
   const [books, setBooks] = useState([])
+  const [page, setPage] = useState(1)
   const [selectedBook, setSelectedBook] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  
 
-   const handleSearch = async (e) => {
-    e.preventDefault()
-    if (!query.trim()) return
+  const fetchBooks = async (searchQuery, pageNum = 1) => {
+    if (!searchQuery.trim()) return
     setLoading(true)
     setError('')
     setSelectedBook(null)
     try {
-      const data = await lookupBook(query)
+      const data = await lookupBook(searchQuery, pageNum)
       setBooks(data)
-      if (data.length === 0) setError('No books found.')
+      setPage(pageNum)
+      if (data.length === 0) {
+        setError(pageNum === 1 ? 'No books found.' : 'No more books found.')
+      }
     } catch (err) {
       setError('Failed to fetch books.')
     } finally {
@@ -27,11 +29,20 @@ function App() {
     }
   }
 
-    // When user selects a book, save it to PostgreSQL cache!
+  const handleSearch = async (e) => {
+    e.preventDefault()
+    await fetchBooks(query, 1)
+  }
+
+  // When user selects a book, save it to PostgreSQL cache!
   const handleSelectBook = async (book) => {
     try {
       const saved = await saveBook(book)
       setSelectedBook(saved)
+      // Update book in list so its status changes to cached
+      setBooks((prev) =>
+        prev.map((b) => (b.isbn === book.isbn ? { ...b, id: saved.id } : b))
+      )
       alert(`Saved "${book.title}" to PostgreSQL cache!`)
     } catch (err) {
       alert('Failed to save book.')
@@ -54,11 +65,15 @@ function App() {
         </button>
       </form>
       {error && <p style={{ color: 'red' }}>{error}</p>}
-      {/* Top 5 Results */}
+      
+      {/* Search Results */}
       {books.length > 0 && (
         <div style={{ marginTop: 24 }}>
-          <h3>Top Results ({books.length}):</h3>
-          <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0 }}>Results (Page {page}):</h3>
+            <span style={{ fontSize: 13, color: '#666' }}>Showing {books.length} items</span>
+          </div>
+          <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
             {books.map((b, idx) => (
               <div
                 key={idx}
@@ -79,19 +94,39 @@ function App() {
                 </div>
                 <button
                   onClick={() => handleSelectBook(b)}
+                  disabled={Boolean(b.id)}
                   style={{
                     padding: '8px 14px',
-                    background: '#2563eb',
+                    background: b.id ? '#10b981' : '#2563eb',
                     color: '#fff',
                     border: 'none',
                     borderRadius: 6,
-                    cursor: 'pointer'
+                    cursor: b.id ? 'default' : 'pointer'
                   }}
                 >
-                  Select & Cache
+                  {b.id ? '✓ Cached' : 'Select & Cache'}
                 </button>
               </div>
             ))}
+          </div>
+
+          {/* Pagination Controls */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
+            <button
+              onClick={() => fetchBooks(query, page - 1)}
+              disabled={page <= 1 || loading}
+              style={{ padding: '8px 16px', cursor: page <= 1 ? 'not-allowed' : 'pointer' }}
+            >
+              ← Previous
+            </button>
+            <span style={{ fontWeight: 'bold', color: '#555' }}>Page {page}</span>
+            <button
+              onClick={() => fetchBooks(query, page + 1)}
+              disabled={books.length < 5 || loading}
+              style={{ padding: '8px 16px', cursor: books.length < 5 ? 'not-allowed' : 'pointer' }}
+            >
+              Next →
+            </button>
           </div>
         </div>
       )}

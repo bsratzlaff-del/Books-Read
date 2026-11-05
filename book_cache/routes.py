@@ -1,5 +1,5 @@
 # book_cache/routes.py
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from .database import get_db_books
 from .schemas import BookCreate, BookResponse
@@ -7,29 +7,50 @@ from . import models, open_book
 
 router = APIRouter(prefix="/books", tags=["Books Cache & Database"])
 
-# 1. Cache Lookup Endpoint (Checks DB cache -> tops up from Open Library to total 5)
+# 1. Cache Lookup Endpoint (Paginated: Checks DB cache -> tops up from Open Library)
 @router.get("/lookup", response_model=list[BookResponse])
-async def get_or_fetch_book(q: str, db: Session = Depends(get_db_books)):
+async def get_or_fetch_book(
+    q: str = Query(..., description="Search query"),
+    page: int = Query(1, ge=1, description="Page number"),
+    limit: int = Query(5, ge=1, le=20, description="Items per page"),
+    db: Session = Depends(get_db_books)
+):
     results = []
-    
-    # 1. First check database cache (matches title OR author, up to 5)
-    cached_books = db.query(models.Book_Name).filter(
+    global_offset = (page - 1) * limit
+
+    # Count matching books in database cache
+    cache_query = db.query(models.Book_Name).filter(
         (models.Book_Name.title.ilike(f"%{q}%")) |
         (models.Book_Name.author_name.ilike(f"%{q}%"))
-    ).limit(5).all()
-    for book in cached_books:
-        results.append(book)
+    )
+    total_cached = cache_query.count()
 
-    # 2. If fewer than 5 in cache, fetch remaining from Open Library to reach 5 total
-    if len(results) < 5:
-        open_library_results = await open_book.search_books(q=q)
+    # 1. Pull from DB cache if this page range overlaps cached records
+    if global_offset < total_cached:
+        cached_books = cache_query.offset(global_offset).limit(limit).all()
+        for book in cached_books:
+            results.append(book)
+
+    # 2. If fewer than limit in results, top up from Open Library
+    if len(results) < limit:
+        needed = limit - len(results)
+
+        # Calculate Open Library offset:
+        # If past the cached records, offset into Open Library by the difference; otherwise start at 0
+        ol_offset = max(0, global_offset - total_cached)
+
+        open_library_results = await open_book.search_books(
+            q=q,
+            offset=ol_offset,
+            limit=needed + 10
+        )
         
         # Track ISBNs and titles already in results to prevent duplicate entries
         existing_isbns = {b.isbn for b in results if b.isbn}
         existing_titles = {b.title.lower() for b in results if b.title}
 
         for ol_book in open_library_results:
-            if len(results) >= 5:
+            if len(results) >= limit:
                 break
 
             # Avoid duplicates if book is already in database cache

@@ -3,8 +3,8 @@ const BOOK_CACHE_URL = import.meta.env.VITE_BOOK_CACHE_URL || 'http://localhost:
 const USERS_BACKEND_URL = import.meta.env.VITE_USERS_BACKEND_URL || 'http://localhost:8001';
 
 //get lookup book public
-export async function lookupBook(query) {
-    const res = await fetch(`${BOOK_CACHE_URL}/books/lookup?q=${encodeURIComponent(query)}`);
+export async function lookupBook(query, page = 1) {
+    const res = await fetch(`${BOOK_CACHE_URL}/books/lookup?q=${encodeURIComponent(query)}&page=${page}`);
     return res.json();
 }
 

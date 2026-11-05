@@ -19,7 +19,10 @@ class BookResponse(BaseModel):
 
 
 @router.get("/search", response_model=List[BookResponse])
-async def search_books(q: Optional[str] = Query(None, description="Search query"),
+async def search_books(
+    q: Optional[str] = Query(None, description="Search query"),
+    offset: int = Query(0, ge=0, description="Offset for pagination"),
+    limit: int = Query(10, ge=1, le=50, description="Limit of books to return"),
 ):
     query_term = q
     if not query_term:
@@ -33,7 +36,8 @@ async def search_books(q: Optional[str] = Query(None, description="Search query"
     # Explicitly asking Open Library to return isbn and edition_key
     params = {
         "q": query_term,
-        "limit": 10,
+        "offset": offset,
+        "limit": limit,
         "fields": "title,author_name,first_publish_year,isbn,edition_key",
     }
 

@@ -87,5 +87,28 @@ def test_cache_partial_hit_tops_up():
             assert data[idx]["title"] == f"Open Lib Odyssey {idx + 1}"
 
         # Verify Open Library WAS contacted to top up
-        mock_search.assert_called_once_with(q="Cache Partial Odyssey")
+        assert mock_search.call_args.kwargs["q"] == "Cache Partial Odyssey"
+        assert mock_search.call_args.kwargs["offset"] == 0
         print("\n✅ PASSED: Partial cache hit topped up from Open Library to reach 5 total results!")
+
+
+def test_cache_pagination_page_two():
+    """Verify requesting page 2 calculates correct offsets and returns next set of results."""
+    mock_ol_books = [
+        OLBookResponse(title=f"Page Two Book {i}", isbn=f"OL-P2-{i}", author_name=[f"Author {i}"])
+        for i in range(1, 6)
+    ]
+
+    with patch("book_cache.routes.open_book.search_books", new_callable=AsyncMock) as mock_search:
+        mock_search.return_value = mock_ol_books
+
+        response = client.get("/books/lookup?q=NonexistentQueryForPagination&page=2&limit=5")
+
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 5
+        assert data[0]["title"] == "Page Two Book 1"
+
+        # For page 2 with 0 cached books: ol_offset = (2 - 1) * 5 - 0 = 5
+        assert mock_search.call_args.kwargs["offset"] == 5
+        print("\n✅ PASSED: Page 2 correctly requested Open Library starting from offset 5!")
