@@ -4,6 +4,8 @@ from fastapi.testclient import TestClient
 from book_cache.main import app
 from book_cache.database import SessionLocal
 from book_cache import models
+from book_cache import routes
+
 
 client = TestClient(app)
 
@@ -26,7 +28,7 @@ def test_cache_hit():
     db.close()
 
     #Second, mock open_book.search_books to track whether or not it gets called
-    with patch("book_cache.main.open_book.search_books", new_callable=AsyncMock) as mock_search:
+    with patch("book_cache.routes.open_book.search_books", new_callable=AsyncMock) as mock_search:
         #Third, request book already in database
         response = client.get("/books/lookup?q=Cache Test Odyssey")
 

@@ -24,5 +24,5 @@ app.add_middleware(
 )
 
 # 3. Mount the two routers!
-app.include_router(book_cache_router) # Database CRUD & Cache Lookup (/books)
 app.include_router(open_book_router)  # Open Library API (/books/search)
+app.include_router(book_cache_router) # Database CRUD & Cache Lookup (/books)

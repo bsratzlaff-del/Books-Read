@@ -4,6 +4,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 from book_cache.database import SessionLocal
 from book_cache import models
+from book_cache import routes
 
 def test_database_crud_lifecycle():
     db = SessionLocal()
