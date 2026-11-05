@@ -14,7 +14,7 @@ class BookCreate(BaseModel):
 
 #when sending book back to client
 class BookResponse(BookCreate):
-    id: int
+    id: Optional[int] = None
 
     model_config = ConfigDict (from_attributes = True)
 

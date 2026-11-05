@@ -13,3 +13,17 @@ export async function getUserLibrary(userID) {
     const res = await fetch(`${USERS_BACKEND_URL}/users/${userID}/books`);
     return res.json();
 }
+
+
+export async function saveBook(bookData) {
+  const res = await fetch(`${BOOK_CACHE_URL}/books`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      title: bookData.title,
+      isbn: bookData.isbn,
+      author_name: bookData.author_name || 'Unknown'
+    }),
+  });
+  return res.json();
+}

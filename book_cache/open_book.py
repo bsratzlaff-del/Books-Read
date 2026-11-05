@@ -33,7 +33,7 @@ async def search_books(q: Optional[str] = Query(None, description="Search query"
     # Explicitly asking Open Library to return isbn and edition_key
     params = {
         "q": query_term,
-        "limit": 5,
+        "limit": 10,
         "fields": "title,author_name,first_publish_year,isbn,edition_key",
     }
 

@@ -7,41 +7,51 @@ from . import models, open_book
 
 router = APIRouter(prefix="/books", tags=["Books Cache & Database"])
 
-# 1. Cache Lookup Endpoint (Checks DB cache -> calls Open Library -> saves)
-@router.get("/lookup")
+# 1. Cache Lookup Endpoint (Checks DB cache -> tops up from Open Library to total 5)
+@router.get("/lookup", response_model=list[BookResponse])
 async def get_or_fetch_book(q: str, db: Session = Depends(get_db_books)):
-    # First check database cache
-    cached_book = db.query(models.Book_Name).filter(
-        models.Book_Name.title.ilike(f"%{q}%")
-    ).first()
+    results = []
+    
+    # 1. First check database cache (matches title OR author, up to 5)
+    cached_books = db.query(models.Book_Name).filter(
+        (models.Book_Name.title.ilike(f"%{q}%")) |
+        (models.Book_Name.author_name.ilike(f"%{q}%"))
+    ).limit(5).all()
+    for book in cached_books:
+        results.append(book)
 
-    if cached_book:
-        print("🎯 Cache Hit! Returning from PostgreSQL")
-        return cached_book
+    # 2. If fewer than 5 in cache, fetch remaining from Open Library to reach 5 total
+    if len(results) < 5:
+        open_library_results = await open_book.search_books(q=q)
+        
+        # Track ISBNs and titles already in results to prevent duplicate entries
+        existing_isbns = {b.isbn for b in results if b.isbn}
+        existing_titles = {b.title.lower() for b in results if b.title}
 
-    # Cache Miss: call Open Library API
-    print("⚡ Cache Miss! Fetching from Open Library")
-    open_library_results = await open_book.search_books(q=q)
+        for ol_book in open_library_results:
+            if len(results) >= 5:
+                break
 
-    if not open_library_results:
-        raise HTTPException(status_code=404, detail="Book not found anywhere")
+            # Avoid duplicates if book is already in database cache
+            if ol_book.isbn and ol_book.isbn in existing_isbns:
+                continue
+            if ol_book.title and ol_book.title.lower() in existing_titles:
+                continue
 
-    first_result = open_library_results[0]
+            results.append(BookResponse(
+                id=None,
+                title=ol_book.title or "Unknown Title",
+                isbn=ol_book.isbn or "UNKNOWN",
+                author_name=", ".join(ol_book.author_name) if ol_book.author_name else "Unknown"
+            ))
+            if ol_book.isbn:
+                existing_isbns.add(ol_book.isbn)
+            if ol_book.title:
+                existing_titles.add(ol_book.title.lower())
 
-    # Save to cache in database
-    new_cached_book = models.Book_Name(
-        title=first_result.title,
-        isbn=first_result.isbn or "UNKNOWN",
-        author_name=", ".join(first_result.author_name) 
-            if first_result.author_name 
-            else ""
-    )
-    db.add(new_cached_book)
-    db.commit()
-    db.refresh(new_cached_book)
+    return results
 
-    return new_cached_book
-
+    
 # 2. Fetch all books from DB
 @router.get("", response_model=list[BookResponse])
 def get_all_books(db: Session = Depends(get_db_books)):
